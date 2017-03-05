@@ -1,0 +1,18 @@
+{
+    "version": "1.0.0",
+    "summary": "An Elm port of Magicl",
+    "repository": "https://github.com/arowM/elm-magicl.git",
+    "license": "MIT",
+    "source-directories": [
+        "src"
+    ],
+    "exposed-modules": [
+        "Magicl"
+    ],
+    "dependencies": {
+        "elm-lang/core": "5.0.0 <= v < 6.0.0",
+        "elm-lang/html": "2.0.0 <= v < 3.0.0",
+        "rtfeldman/elm-css": "8.1.0 <= v < 9.0.0"
+    },
+    "elm-version": "0.18.0 <= v < 0.19.0"
+}
