@@ -48,46 +48,34 @@ type Magicl msg
 
 {-| Transpile `Magicl` to [HTML](http://package.elm-lang.org/packages/elm-lang/html/latest) and [elm-css](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest).
 -}
-compile : Magicl msg -> ( Html msg, Css.Stylesheet )
-compile magicl =
+compile : String -> Magicl msg -> ( Html msg, Css.Stylesheet )
+compile namespace magicl =
   let
     ( html, snippet ) =
-      compile_ [ 0 ] magicl
+      compile_ namespace magicl
   in
     ( html, Css.stylesheet [ snippet ] )
 
 
-compile_ : List Int -> Magicl msg -> ( Html msg, Css.Snippet )
+compile_ : String -> Magicl msg -> ( Html msg, Css.Snippet )
 compile_ id (Magicl { tagName, attributes, css, children }) =
   let
     ( _, htmls_, snippets_ ) =
-      List.foldr
-        (\a ( ns, htmls, snippets ) ->
-          let
-            id_ =
-              case ns of
-                n_ :: ns_ ->
-                  (n_ + 1) :: ns_
+      List.foldr f ( 0, [], [] ) children
 
-                [] ->
-                  []
-
-            ( html, snippet ) =
-              compile_ id_ a
-          in
-            ( id_, html :: htmls, snippet :: snippets )
-        )
-        ( 0 :: id, [], [] )
-        children
-
-    className =
-      String.join "-" <| List.map toString id
+    f : (Magicl msg) -> ( Int, List (Html msg), List Css.Snippet ) -> ( Int, List (Html msg), List Css.Snippet )
+    f magicl ( n, htmls, snippets ) =
+      let
+        id_ = id ++ "-" ++ toString n
+        ( html, snippet ) = compile_ id_ magicl
+      in
+        ( n + 1, html :: htmls, snippet :: snippets )
   in
     ( Html.node
       tagName
-      (Attributes.class className :: attributes)
+      (Attributes.class id :: attributes)
       htmls_
-    , Css.class className <|
+    , Css.class id <|
       Css.children snippets_
         :: css
     )
