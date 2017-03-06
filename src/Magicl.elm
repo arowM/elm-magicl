@@ -3,6 +3,7 @@ module Magicl
     ( Magicl
     , compile
     , empty
+    , tagName
     )
 
 {-| An Elm port of magicl.
@@ -15,12 +16,17 @@ module Magicl
 
 # Constructors
 @docs empty
+
+# Lower level functions
+## Lenses
+@docs tagName
 -}
 
 import Css
 import Html exposing (Html)
 import Html.Attributes as Attributes
 import Html.Events as Events
+import Monocle.Lens as Lens exposing (Lens)
 
 
 {-| Main type for Magicl.
@@ -79,3 +85,19 @@ empty = Magicl
   , css = []
   , children = []
   }
+
+
+-- Lower level functions
+
+
+{-| Lens for tag name.
+-}
+tagName : Lens (Magicl msg) String
+tagName =
+  let
+    get (Magicl magicl) = magicl.tagName
+    set tag (Magicl magicl) =
+      Magicl
+        { magicl | tagName = tag }
+  in
+    Lens get set
