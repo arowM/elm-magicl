@@ -4,6 +4,9 @@ module Magicl
     , compile
     , empty
     , tagName
+    , attributes
+    , children
+    , css
     )
 
 {-| An Elm port of magicl.
@@ -20,10 +23,13 @@ module Magicl
 # Lower level functions
 ## Lenses
 @docs tagName
+@docs attributes
+@docs children
+@docs css
 -}
 
 import Css
-import Html exposing (Html)
+import Html exposing (Attribute, Html)
 import Html.Attributes as Attributes
 import Html.Events as Events
 import Monocle.Lens as Lens exposing (Lens)
@@ -34,7 +40,7 @@ import Monocle.Lens as Lens exposing (Lens)
 type Magicl msg
   = Magicl
     { tagName : String
-    , attributes : List (Html.Attribute msg)
+    , attributes : List (Attribute msg)
     , css : List Css.Mixin
     , children : List (Magicl msg)
     }
@@ -114,5 +120,50 @@ tagName =
     set tag (Magicl magicl) =
       Magicl
         { magicl | tagName = tag }
+  in
+    Lens get set
+
+
+{-| Lens for attributes.
+-}
+attributes : Lens (Magicl msg) (List (Attribute msg))
+attributes =
+  let
+    get (Magicl magicl) =
+      magicl.attributes
+
+    set a (Magicl magicl) =
+      Magicl
+        { magicl | attributes = a }
+  in
+    Lens get set
+
+
+{-| Lens for CSS.
+-}
+css : Lens (Magicl msg) (List Css.Mixin)
+css =
+  let
+    get (Magicl magicl) =
+      magicl.css
+
+    set a (Magicl magicl) =
+      Magicl
+        { magicl | css = a }
+  in
+    Lens get set
+
+
+{-| Lens for children.
+-}
+children : Lens (Magicl msg) (List (Magicl msg))
+children =
+  let
+    get (Magicl magicl) =
+      magicl.children
+
+    set a (Magicl magicl) =
+      Magicl
+        { magicl | children = a }
   in
     Lens get set
