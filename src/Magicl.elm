@@ -96,6 +96,21 @@ empty =
     }
 
 
+setStyle : List Css.Mixin -> Magicl msg -> Magicl msg
+setStyle styles =
+  Lens.modify css (\ls -> (List.map always styles) ++ ls)
+
+
+setStyleOn : state -> List Css.Mixin -> Magicl msg -> Magicl msg
+setStyleOn state styles =
+  let
+    css_ : String -> Css.Mixin
+    css_ id =
+      Css.withClass (id ++ "-" ++ toString state) styles
+  in
+    Lens.modify css (\ls -> css_ :: ls)
+
+
 
 -- Lower level functions
 
