@@ -41,7 +41,7 @@ type Magicl msg
   = Magicl
     { tagName : String
     , attributes : List (Attribute msg)
-    , css : List Css.Mixin
+    , css : List (String -> Css.Mixin)
     , children : List (Magicl msg)
     }
 
@@ -63,11 +63,14 @@ compile_ id (Magicl { tagName, attributes, css, children }) =
     ( _, htmls_, snippets_ ) =
       List.foldr f ( 0, [], [] ) children
 
-    f : (Magicl msg) -> ( Int, List (Html msg), List Css.Snippet ) -> ( Int, List (Html msg), List Css.Snippet )
+    f : Magicl msg -> ( Int, List (Html msg), List Css.Snippet ) -> ( Int, List (Html msg), List Css.Snippet )
     f magicl ( n, htmls, snippets ) =
       let
-        id_ = id ++ "-" ++ toString n
-        ( html, snippet ) = compile_ id_ magicl
+        id_ =
+          id ++ "-" ++ toString n
+
+        ( html, snippet ) =
+          compile_ id_ magicl
       in
         ( n + 1, html :: htmls, snippet :: snippets )
   in
@@ -77,7 +80,7 @@ compile_ id (Magicl { tagName, attributes, css, children }) =
       htmls_
     , Css.class id <|
       Css.children snippets_
-        :: css
+        :: List.map (\f -> f id) css
     )
 
 
@@ -129,7 +132,7 @@ attributes =
 
 {-| Lens for CSS.
 -}
-css : Lens (Magicl msg) (List Css.Mixin)
+css : Lens (Magicl msg) (List (String -> Css.Mixin))
 css =
   let
     get (Magicl magicl) =
