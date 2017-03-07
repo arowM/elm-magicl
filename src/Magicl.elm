@@ -3,6 +3,7 @@ module Magicl
     ( Magicl
     , compile
     , empty
+    , setState
     , setStyle
     , setStyleOn
     , tagName
@@ -23,6 +24,7 @@ module Magicl
 @docs empty
 
 # Setters
+@docs setState
 @docs setStyle
 @docs setStyleOn
 
@@ -98,6 +100,14 @@ empty =
     , css = []
     , children = []
     }
+
+
+{-| Set state of `Magicl msg state` value.
+-}
+setState : state -> Magicl msg state -> Magicl msg state
+setState state =
+  Lens.modify attributes <|
+    \attr -> Attributes.attribute "data-magicl-state" (toString state) :: attr
 
 
 {-| Set style for anytime.
