@@ -3,6 +3,8 @@ module Magicl
     ( Magicl
     , compile
     , empty
+    , setStyle
+    , setStyleOn
     , tagName
     , attributes
     , children
@@ -19,6 +21,10 @@ module Magicl
 
 # Constructors
 @docs empty
+
+# Setters
+@docs setStyle
+@docs setStyleOn
 
 # Lower level functions
 ## Lenses
@@ -94,11 +100,15 @@ empty =
     }
 
 
+{-| Set style for anytime.
+-}
 setStyle : List Css.Mixin -> Magicl msg state -> Magicl msg state
 setStyle styles =
   Lens.modify css (\ls -> (\id -> Css.class id styles) :: ls)
 
 
+{-| Set style for specific state.
+-}
 setStyleOn : state -> List Css.Mixin -> Magicl msg state -> Magicl msg state
 setStyleOn state styles =
   let
