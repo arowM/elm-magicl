@@ -37,33 +37,33 @@ import Monocle.Lens as Lens exposing (Lens)
 
 {-| Main type for Magicl.
 -}
-type Magicl msg
+type Magicl msg state
   = Magicl
     { tagName : String
     , attributes : List (Attribute msg)
     , css : List (String -> Css.Mixin)
-    , children : List (Magicl msg)
+    , children : List (Magicl msg ())
     }
 
 
 {-| Transpile `Magicl` to [HTML](http://package.elm-lang.org/packages/elm-lang/html/latest) and [elm-css](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest).
 -}
-compile : String -> Magicl msg -> ( Html msg, Css.Stylesheet )
+compile : String -> Magicl msg state -> ( Html msg, Css.Stylesheet )
 compile namespace magicl =
   let
     ( html, snippet ) =
-      compile_ namespace magicl
+      compile_ namespace <| coerce magicl
   in
     ( html, Css.stylesheet [ snippet ] )
 
 
-compile_ : String -> Magicl msg -> ( Html msg, Css.Snippet )
+compile_ : String -> Magicl msg () -> ( Html msg, Css.Snippet )
 compile_ id (Magicl { tagName, attributes, css, children }) =
   let
     ( _, htmls_, snippets_ ) =
       List.foldr f ( 0, [], [] ) children
 
-    f : Magicl msg -> ( Int, List (Html msg), List Css.Snippet ) -> ( Int, List (Html msg), List Css.Snippet )
+    f : Magicl msg () -> ( Int, List (Html msg), List Css.Snippet ) -> ( Int, List (Html msg), List Css.Snippet )
     f magicl ( n, htmls, snippets ) =
       let
         id_ =
@@ -86,7 +86,7 @@ compile_ id (Magicl { tagName, attributes, css, children }) =
 
 {-| An empty value of `Magicl`.
 -}
-empty : Magicl msg
+empty : Magicl msg state
 empty =
   Magicl
     { tagName = "div"
@@ -96,12 +96,12 @@ empty =
     }
 
 
-setStyle : List Css.Mixin -> Magicl msg -> Magicl msg
+setStyle : List Css.Mixin -> Magicl msg state -> Magicl msg state
 setStyle styles =
   Lens.modify css (\ls -> (List.map always styles) ++ ls)
 
 
-setStyleOn : state -> List Css.Mixin -> Magicl msg -> Magicl msg
+setStyleOn : state -> List Css.Mixin -> Magicl msg state -> Magicl msg state
 setStyleOn state styles =
   let
     css_ : String -> Css.Mixin
@@ -111,13 +111,17 @@ setStyleOn state styles =
     Lens.modify css (\ls -> css_ :: ls)
 
 
+coerce : Magicl msg a -> Magicl msg b
+coerce (Magicl o) = Magicl o
+
+
 
 -- Lower level functions
 
 
 {-| Lens for tag name.
 -}
-tagName : Lens (Magicl msg) String
+tagName : Lens (Magicl msg state) String
 tagName =
   let
     get (Magicl magicl) =
@@ -132,7 +136,7 @@ tagName =
 
 {-| Lens for attributes.
 -}
-attributes : Lens (Magicl msg) (List (Attribute msg))
+attributes : Lens (Magicl msg state) (List (Attribute msg))
 attributes =
   let
     get (Magicl magicl) =
@@ -147,7 +151,7 @@ attributes =
 
 {-| Lens for CSS.
 -}
-css : Lens (Magicl msg) (List (String -> Css.Mixin))
+css : Lens (Magicl msg state) (List (String -> Css.Mixin))
 css =
   let
     get (Magicl magicl) =
@@ -162,7 +166,7 @@ css =
 
 {-| Lens for children.
 -}
-children : Lens (Magicl msg) (List (Magicl msg))
+children : Lens (Magicl msg state) (List (Magicl msg ()))
 children =
   let
     get (Magicl magicl) =
