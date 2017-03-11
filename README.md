@@ -1,3 +1,3 @@
 # elm-magicl
 
-An Elm port of Magicl.
+A magical library to generate HTML/CSS for realistic applications with simple APIs.
