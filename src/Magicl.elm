@@ -6,6 +6,7 @@ module Magicl
     , setState
     , setStyle
     , setStyleOn
+    , combine
     , tagName
     , attributes
     , children
@@ -27,6 +28,9 @@ module Magicl
 @docs setState
 @docs setStyle
 @docs setStyleOn
+
+# Combinators
+@docs combine
 
 # Lower level functions
 ## Lenses
@@ -132,6 +136,25 @@ setStyleOn state styles =
 coerce : Magicl msg a -> Magicl msg b
 coerce (Magicl o) =
   Magicl o
+
+
+
+-- Combinators
+
+
+{-| A simple combinator.
+-}
+combine : Magicl msg s0 -> Magicl msg s1 -> Magicl msg ()
+combine m1 m2 =
+  Magicl
+    { tagName = "div"
+    , attributes = []
+    , css = []
+    , children =
+      [ coerce m1
+      , coerce m2
+      ]
+    }
 
 
 
