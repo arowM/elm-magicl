@@ -6,7 +6,7 @@ module Magicl
     , setState
     , setStyle
     , setStyleOn
-    , combine
+    , combineRight
     , tagName
     , attributes
     , children
@@ -30,7 +30,7 @@ module Magicl
 @docs setStyleOn
 
 # Combinators
-@docs combine
+@docs combineRight
 
 # Lower level functions
 ## Lenses
@@ -61,7 +61,7 @@ type Magicl msg state
 
 type Direction
   = NoDirection
-  | ToLeft
+  | ToRight
   | ToBottom
 
 
@@ -150,20 +150,35 @@ coerce (Magicl o) =
 -- Combinators
 
 
-{-| A simple combinator.
+{-| Combine second block to the right side of first block.
 -}
-combine : Magicl msg s0 -> Magicl msg s1 -> Magicl msg ()
-combine m1 m2 =
-  Magicl
-    { tagName = "div"
-    , attributes = []
-    , css = []
-    , children =
-      [ coerce m1
-      , coerce m2
-      ]
-    , direction = ToLeft
-    }
+combineRight : Magicl msg s0 -> Magicl msg s1 -> Magicl msg ()
+combineRight m1 m2 =
+  case direction.get m1 of
+    ToRight ->
+      coerce m1
+        |> Lens.modify children (\cs ->
+          cs ++
+            [ coerce m2
+            ]
+        )
+
+    _ ->
+      empty
+        |> tagName.set "div"
+        |> direction.set ToRight
+        |> Lens.modify css (\ls ->
+          (\id ->
+            Css.class id
+              [ Css.displayFlex
+              , Css.flexDirection Css.row
+              ]
+          ) :: ls
+        )
+        |> children.set
+          [ coerce m1
+          , coerce m2
+          ]
 
 
 
