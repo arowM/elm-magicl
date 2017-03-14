@@ -7,6 +7,7 @@ module Magicl
     , setStyle
     , setStyleOn
     , combineRight
+    , combineBottom
     , tagName
     , attributes
     , children
@@ -31,6 +32,7 @@ module Magicl
 
 # Combinators
 @docs combineRight
+@docs combineBottom
 
 # Lower level functions
 ## Lenses
@@ -180,6 +182,36 @@ combineRight m1 m2 =
           , coerce m2
           ]
 
+
+{-| Combine second block to the bottom of first block.
+-}
+combineBottom : Magicl msg s0 -> Magicl msg s1 -> Magicl msg ()
+combineBottom m1 m2 =
+  case direction.get m1 of
+    ToBottom ->
+      coerce m1
+        |> Lens.modify children (\cs ->
+          cs ++
+            [ coerce m2
+            ]
+        )
+
+    _ ->
+      empty
+        |> tagName.set "div"
+        |> direction.set ToBottom
+        |> Lens.modify css (\ls ->
+          (\id ->
+            Css.class id
+              [ Css.displayFlex
+              , Css.flexDirection Css.column
+              ]
+          ) :: ls
+        )
+        |> children.set
+          [ coerce m1
+          , coerce m2
+          ]
 
 
 -- Lower level functions
