@@ -55,7 +55,14 @@ type Magicl msg state
     , attributes : List (Attribute msg)
     , css : List (String -> Css.Snippet)
     , children : List (Magicl msg ())
+    , direction : Direction
     }
+
+
+type Direction
+  = NoDirection
+  | ToLeft
+  | ToBottom
 
 
 {-| Transpile `Magicl` to [HTML](http://package.elm-lang.org/packages/elm-lang/html/latest) and [elm-css](http://package.elm-lang.org/packages/rtfeldman/elm-css/latest).
@@ -103,6 +110,7 @@ empty =
     , attributes = []
     , css = []
     , children = []
+    , direction = NoDirection
     }
 
 
@@ -154,6 +162,7 @@ combine m1 m2 =
       [ coerce m1
       , coerce m2
       ]
+    , direction = ToLeft
     }
 
 
