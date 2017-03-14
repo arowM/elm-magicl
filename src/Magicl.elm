@@ -3,6 +3,7 @@ module Magicl
     ( Magicl
     , compile
     , empty
+    , text
     , setState
     , setStyle
     , setStyleOn
@@ -24,6 +25,7 @@ module Magicl
 
 # Constructors
 @docs empty
+@docs text
 
 # Setters
 @docs setState
@@ -56,9 +58,14 @@ type Magicl msg state
     { tagName : String
     , attributes : List (Attribute msg)
     , css : List (String -> Css.Snippet)
-    , children : List (Magicl msg ())
+    , children : Children msg
     , direction : Direction
     }
+
+
+type Children msg
+  = Node (List (Magicl msg ()))
+  | Text String
 
 
 type Direction
@@ -79,7 +86,16 @@ compile namespace magicl =
 
 
 compile_ : String -> Magicl msg () -> ( Html msg, List Css.Snippet )
-compile_ id (Magicl { tagName, attributes, css, children }) =
+compile_ id m =
+  case children.get m of
+    Node ls ->
+      compileNode id m ls
+
+    Text str ->
+      compileText id m str
+
+compileNode : String -> Magicl msg () -> List (Magicl msg ()) -> ( Html msg, List Css.Snippet )
+compileNode id m children =
   let
     ( _, htmls_, snippets_ ) =
       List.foldr f ( 0, [], [] ) children
@@ -96,12 +112,21 @@ compile_ id (Magicl { tagName, attributes, css, children }) =
         ( n + 1, html :: htmls, snippet ++ snippets )
   in
     ( Html.node
-      tagName
-      (Attributes.class id :: attributes)
+      (tagName.get m)
+      (Attributes.class id :: attributes.get m)
       htmls_
-    , snippets_
+    , (List.map (\f -> f id) <| css.get m) ++ snippets_
     )
 
+
+compileText : String -> Magicl msg () -> String -> ( Html msg, List Css.Snippet )
+compileText id m str =
+    ( Html.node
+      "div"
+      (Attributes.class id :: attributes.get m)
+      [ Html.text str ]
+    , (List.map (\f -> f id) <| css.get m)
+    )
 
 {-| An empty value of `Magicl`.
 -}
@@ -111,9 +136,17 @@ empty =
     { tagName = "div"
     , attributes = []
     , css = []
-    , children = []
+    , children = Node []
     , direction = NoDirection
     }
+
+
+{-| An instance of `Magicl` to show some text.
+-}
+text : String -> Magicl msg a
+text str =
+  empty
+    |> children.set (Text str)
 
 
 {-| Set state of `Magicl msg state` value.
@@ -156,14 +189,15 @@ coerce (Magicl o) =
 -}
 combineRight : Magicl msg s0 -> Magicl msg s1 -> Magicl msg ()
 combineRight m1 m2 =
-  case direction.get m1 of
-    ToRight ->
+  case ( direction.get m1, children.get m1 ) of
+    ( ToRight, Node cs ) ->
       coerce m1
-        |> Lens.modify children (\cs ->
-          cs ++
+        |> children.set
+          (Node <|
+            cs ++
             [ coerce m2
             ]
-        )
+          )
 
     _ ->
       empty
@@ -178,23 +212,26 @@ combineRight m1 m2 =
           ) :: ls
         )
         |> children.set
-          [ coerce m1
-          , coerce m2
-          ]
+          ( Node
+            [ coerce m1
+            , coerce m2
+            ]
+          )
 
 
 {-| Combine second block to the bottom of first block.
 -}
 combineBottom : Magicl msg s0 -> Magicl msg s1 -> Magicl msg ()
 combineBottom m1 m2 =
-  case direction.get m1 of
-    ToBottom ->
+  case ( direction.get m1, children.get m1 ) of
+    ( ToBottom, Node cs ) ->
       coerce m1
-        |> Lens.modify children (\cs ->
-          cs ++
+        |> children.set
+          ( Node <|
+            cs ++
             [ coerce m2
             ]
-        )
+          )
 
     _ ->
       empty
@@ -209,9 +246,11 @@ combineBottom m1 m2 =
           ) :: ls
         )
         |> children.set
-          [ coerce m1
-          , coerce m2
-          ]
+          ( Node
+            [ coerce m1
+            , coerce m2
+            ]
+          )
 
 
 -- Lower level functions
@@ -264,7 +303,7 @@ css =
 
 {-| Lens for children.
 -}
-children : Lens (Magicl msg state) (List (Magicl msg ()))
+children : Lens (Magicl msg state) (Children msg)
 children =
   let
     get (Magicl magicl) =
