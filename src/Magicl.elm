@@ -228,3 +228,18 @@ children =
         { magicl | children = a }
   in
     Lens get set
+
+
+{-| Lens for direction.
+-}
+direction : Lens (Magicl msg state) Direction
+direction =
+  let
+    get (Magicl magicl) =
+      magicl.direction
+
+    set a (Magicl magicl) =
+      Magicl
+        { magicl | direction = a }
+  in
+    Lens get set
