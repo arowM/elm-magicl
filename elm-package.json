@@ -1,6 +1,6 @@
 {
     "version": "1.0.0",
-    "summary": "An Elm port of Magicl",
+    "summary": "A magical library to generate HTML/CSS for realistic applications with simple APIs.",
     "repository": "https://github.com/arowM/elm-magicl.git",
     "license": "MIT",
     "source-directories": [
